@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
-import avwx
+import avwx # Bibliothèque pour traiter les données METAR
 from datetime import datetime
-import pytz
+import pytz # Pour la gestion des fuseaux horaires
 import sys
 
 
 
 
 
-app = Flask(__name__)
+app = Flask(__name__) # Crée l'instance de l'application Flask
 
 
 def decode_metar(metar_data):
