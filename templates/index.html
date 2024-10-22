@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Application METAR</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Application METAR</h1>
+        <form method="POST">
+            <label for="station_code">Code station ICAO (ex: LFPG)</label>
+            <input type="text" id="station_code" name="station_code" required>
+            <button type="submit">Afficher METAR</button>
+        </form>
+        <div class="result">
+            <h2>Résultats</h2>
+            <p>{{ metar_info|safe }}</p>
+        </div>
+    </div>
+</body>
+</html>
