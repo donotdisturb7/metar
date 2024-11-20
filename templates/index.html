@@ -1,23 +1,177 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <title>Application METAR</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Application METAR</h1>
-        <form method="POST">
-            <label for="station_code">Code station ICAO (ex: LFPG)</label>
-            <input type="text" id="station_code" name="station_code" required>
-            <button type="submit">Afficher METAR</button>
-        </form>
-        <div class="result">
-            <h2>Résultats</h2>
-            <p>{{ metar_info|safe }}</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MétarView</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='img/metar.png') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='img/Metar.png') }}"
+            alt="Logo metar"
+          />
         </div>
+      </div>
+    </header>
+
+    <div class="page-layout">
+      <aside class="left-container">
+        <!-- Contenu du conteneur gauche -->
+        <a
+          href="https://metar-taf.com/fr/LFPG"
+          id="metartaf-lDPdZ6wg"
+          style="
+            font-size: 18px;
+            font-weight: 500;
+            color: #000;
+            width: 300px;
+            height: 435px;
+            display: block;
+          "
+          >METAR Aéroport Paris–Charles de Gaulle</a
+        >
+        <script
+          async
+          defer
+          crossorigin="anonymous"
+          src="https://metar-taf.com/fr/embed-js/LFPG?qnh=hPa&rh=rh&target=lDPdZ6wg"
+        ></script>
+      </aside>
+
+      <main class="container">
+        <section class="search-form">
+          <form method="POST" action="/">
+            <div class="form-group">
+              <div class="input-group">
+                <label for="station_code">Code ICAO de la station</label>
+                <input
+                  type="text"
+                  id="station_code"
+                  name="station_code"
+                  maxlength="4"
+                  pattern="[A-Za-z]{4}"
+                  placeholder="ex: TFFF"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label for="icao_list">Ou sélectionnez un code ICAO</label>
+                <select
+                  id="icao_list"
+                  name="icao_list"
+                  onchange="document.getElementById('station_code').value = this.value;"
+                >
+                  <option value="">Sélectionner un code ICAO</option>
+                  <!-- France -->
+                  <option value="LFPG">
+                    LFPG : Aéroport Charles de Gaulle
+                  </option>
+                  <option value="LFPB">
+                    LFPB : Aéroport de Paris-Le Bourget
+                  </option>
+                  <option value="LFPO">LFPO : Aéroport de Paris-Orly</option>
+                  <option value="LFRN">LFRN : Aéroport de Rennes</option>
+                  <option value="LFBD">
+                    LFBD : Aéroport de Bordeaux-Mérignac
+                  </option>
+                  <!-- Europe -->
+                  <option value="EGLL">
+                    EGLL : Londres-Heathrow (Royaume-Uni)
+                  </option>
+                  <option value="EHAM">
+                    EHAM : Amsterdam-Schiphol (Pays-Bas)
+                  </option>
+                  <option value="EDDF">EDDF : Francfort (Allemagne)</option>
+                  <option value="LEMD">LEMD : Madrid-Barajas (Espagne)</option>
+                  <option value="LIRF">LIRF : Rome Fiumicino (Italie)</option>
+                  <!-- Amérique du Nord -->
+                  <option value="KATL">
+                    KATL : Hartsfield-Jackson, Atlanta (États-Unis)
+                  </option>
+                  <option value="KLAX">KLAX : Los Angeles (États-Unis)</option>
+                  <option value="KJFK">
+                    KJFK : John F. Kennedy, New York (États-Unis)
+                  </option>
+                  <option value="CYYZ">CYYZ : Toronto Pearson (Canada)</option>
+                  <option value="CYVR">CYVR : Vancouver (Canada)</option>
+                  <!-- Asie -->
+                  <option value="RJTT">RJTT : Tokyo Haneda (Japon)</option>
+                  <option value="ZBAA">ZBAA : Pékin Capitale (Chine)</option>
+                  <option value="OMDB">
+                    OMDB : Dubaï (Émirats arabes unis)
+                  </option>
+                  <option value="VIDP">
+                    VIDP : Delhi Indira Gandhi (Inde)
+                  </option>
+                  <option value="WSSS">
+                    WSSS : Singapour Changi (Singapour)
+                  </option>
+                  <!-- Afrique -->
+                  <option value="FAOR">
+                    FAOR : Johannesburg OR Tambo (Afrique du Sud)
+                  </option>
+                  <option value="DNMM">
+                    DNMM : Lagos Murtala Muhammed (Nigeria)
+                  </option>
+                  <option value="HAAB">
+                    HAAB : Addis-Abeba Bole (Éthiopie)
+                  </option>
+                  <!-- Océanie -->
+                  <option value="YSSY">
+                    YSSY : Sydney-Kingsford Smith (Australie)
+                  </option>
+                  <option value="NZAA">
+                    NZAA : Auckland (Nouvelle-Zélande)
+                  </option>
+                </select>
+              </div>
+              <br />
+              <button type="submit">Obtenir le METAR</button>
+            </div>
+          </form>
+        </section>
+
+        {% if metar_info %}
+        <section class="metar-results">
+          {% if "erreur" in metar_info.lower() or "invalide" in
+          metar_info.lower() %}
+          <div class="error-message">{{ metar_info }}</div>
+          {% else %}
+          <div class="metar-info">
+            <h3>{{ airport_name }}</h3>
+            {{ metar_info|safe }}
+          </div>
+          <br>
+          {% if metar_info %}
+          <form method="POST" action="/download">
+            <input
+              type="hidden"
+              name="station_code"
+              value="{{ station_code }}"
+            />
+            <button type="submit">Télécharger le METAR</button>
+          </form>
+          {% endif %} {% endif %}
+        </section>
+        {% endif %}
+      </main>
+
+      <aside class="right-container">
+        <!-- Contenu du conteneur droit -->
+        Conteneur droit
+      </aside>
     </div>
-</body>
+  </body>
 </html>
