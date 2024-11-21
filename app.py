@@ -116,6 +116,35 @@ def decode_metar(metar_data, station_code):
     except (AttributeError, ValueError):
         heure_info = "Données sur l'heure d'observation indisponibles."
 
+    # Décodage de la couverture nuageuse
+    try:
+        clouds = metar_data.clouds  # Liste des couches nuageuses
+        if not clouds:  # Si la liste est vide ou None
+            clouds_info = "Couverture nuageuse : Ciel clair."
+        else:
+            cloud_layers = []
+            for layer in clouds:
+                try:
+                    # Vérification et récupération des données disponibles
+                    coverage = getattr(layer, 'repr', None)  # Code abrégé (FEW029, etc.)
+                    base = getattr(layer, 'base', None)  # Altitude en centaines de pieds
+                    if coverage:  # Si la couverture est présente
+                        if base is not None:
+                            cloud_layers.append(f"{coverage} à {base * 100} pieds")  # Altitude en pieds
+                        else:
+                            cloud_layers.append(coverage)  # Couverture sans altitude
+                except Exception as e:
+                    print(f"Erreur lors du traitement d'une couche nuageuse : {e}", file=sys.stderr)
+            # Construire la description finale
+            if cloud_layers:
+                clouds_info = "Couverture nuageuse : " + ", ".join(cloud_layers) + "."
+            else:
+                clouds_info = "Données sur la couverture nuageuse indisponibles."
+    except Exception as e:
+        clouds_info = f"Données sur la couverture nuageuse indisponibles : {e}"
+
+
+
     # Construction finale des informations décodées
     metar_decoded = (
         f"{vent_info}<br>"
@@ -123,9 +152,11 @@ def decode_metar(metar_data, station_code):
         f"{visibility_info}<br>"
         f"{pression_info}<br>"
         f"{heure_info}<br>"
+        f"{clouds_info}<br>"
     )
 
     return metar_decoded
+
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
