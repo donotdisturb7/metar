@@ -46,38 +46,86 @@ ERROR_MESSAGES = {
 }
 
 def decode_metar(metar_data, station_code):
-    """Décode le rapport METAR en informations compréhensibles"""
-    vent_info = f"Vent venant du {metar_data.wind_direction.repr}° à {metar_data.wind_speed.repr} nœuds."
-    temperature_info = f"Température : {metar_data.temperature.repr}°C, Point de rosée : {metar_data.dewpoint.repr}°C."
+    """Décode le rapport METAR en informations compréhensibles avec gestion des exceptions"""
 
-    visibility = metar_data.visibility.repr
-    if visibility == "CAVOK":
-        visibility_info = "Visibilité : CAVOK (pas de phénomènes significatifs, visibilité supérieure à 10 km)."
-    else:
-        try:
-            visibility_value = float(visibility.replace('SM', '').strip()) if 'SM' in visibility else int(visibility)
-            if 'SM' in visibility or station_code.startswith('K'):
-                visibility_info = f"Visibilité : {visibility_value:.2f} miles." if 'SM' in visibility else f"Visibilité : {visibility_value / 1609.34:.2f} miles."
+    # Décodage du vent
+    try:
+        vent_direction = metar_data.wind_direction.repr
+        vent_vitesse = metar_data.wind_speed.repr
+        vent_info = f"Vent venant du {vent_direction}° à {vent_vitesse} nœuds."
+    except AttributeError:
+        vent_info = "Données sur le vent indisponibles."
+
+    # Décodage de la température et du point de rosée
+    try:
+        temperature = metar_data.temperature.repr
+        dew_point = metar_data.dewpoint.repr
+        temperature_info = f"Température : {temperature}°C, Point de rosée : {dew_point}°C."
+    except AttributeError:
+        temperature_info = "Données sur la température et le point de rosée indisponibles."
+
+    # Décodage de la visibilité
+    try:
+        visibility = metar_data.visibility.repr
+        if visibility == "CAVOK":
+            visibility_info = "Visibilité : CAVOK (pas de phénomènes significatifs, visibilité supérieure à 10 km)."
+        else:
+            if 'SM' in visibility:
+                visibility_value = float(visibility.replace('SM', '').strip())
+                visibility_info = f"Visibilité : {visibility_value} miles."
             else:
-                visibility_info = f"Visibilité : {visibility_value} mètres."
-        except ValueError:
-            visibility_info = f"Visibilité : {visibility} (unité non spécifiée)."
+                visibility_value = int(visibility)
 
-    pression_info = f"Pression atmosphérique : {metar_data.altimeter.repr[1:]} {'hPa' if metar_data.altimeter.repr.startswith('Q') else 'inHg'}."
+                if station_code.startswith('K'):
+                    visibility_in_miles = visibility_value / 1609.34  # Conversion mètres -> miles
+                    visibility_info = f"Visibilité : {visibility_in_miles:.2f} miles."
+                else:
+                    visibility_info = f"Visibilité : {visibility_value} mètres."
+    except (AttributeError, ValueError):
+        visibility_info = "Données sur la visibilité indisponibles."
 
-    time_repr = metar_data.time.repr
-    day, hour, minute = int(time_repr[:2]), int(time_repr[2:4]), int(time_repr[4:6])
-    now = datetime.utcnow()
-    observation_time_utc = now.replace(day=day, hour=hour, minute=minute, second=0, microsecond=0)
-    local_tz = pytz.timezone('America/Martinique')
-    observation_time_local = observation_time_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    # Décodage de la pression atmosphérique
+    try:
+        pression = metar_data.altimeter.repr
+        if pression.startswith('Q'):
+            pression_info = f"Pression atmosphérique : {pression[1:]} hPa (hectopascals, système international)."
+        elif pression.startswith('A'):
+            pression_info = f"Pression atmosphérique : {pression[1:]} inHg (pouces de mercure, utilisé principalement aux USA)."
+        else:
+            pression_info = f"Pression atmosphérique : {pression} (unité non spécifiée)."
+    except AttributeError:
+        pression_info = "Données sur la pression atmosphérique indisponibles."
 
-    heure_info = (
-        f"Heure d'observation UTC : {observation_time_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC<br>"
-        f"Heure locale (Martinique) : {observation_time_local.strftime('%Y-%m-%d %H:%M:%S')} (heure locale)"
+    # Décodage de l'heure d'observation
+    try:
+        time_repr = metar_data.time.repr
+        day = int(time_repr[:2])  # Jour du mois
+        hour = int(time_repr[2:4])  # Heure (UTC)
+        minute = int(time_repr[4:6])
+
+        now = datetime.utcnow()  # Date actuelle en UTC
+        observation_time_utc = now.replace(day=day, hour=hour, minute=minute, second=0, microsecond=0)
+
+        local_tz = pytz.timezone('America/Martinique')
+        observation_time_local = observation_time_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+
+        heure_info = (
+            f"Heure d'observation UTC : {observation_time_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC<br>"
+            f"Heure locale (Martinique) : {observation_time_local.strftime('%Y-%m-%d %H:%M:%S')} (heure locale)"
+        )
+    except (AttributeError, ValueError):
+        heure_info = "Données sur l'heure d'observation indisponibles."
+
+    # Construction finale des informations décodées
+    metar_decoded = (
+        f"{vent_info}<br>"
+        f"{temperature_info}<br>"
+        f"{visibility_info}<br>"
+        f"{pression_info}<br>"
+        f"{heure_info}<br>"
     )
 
-    return f"{vent_info}<br>{temperature_info}<br>{visibility_info}<br>{pression_info}<br>{heure_info}<br>"
+    return metar_decoded
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -116,7 +164,7 @@ def download():
         metar.update()
         metar_info = decode_metar(metar.data, station_code)
         airport_name = AIRPORTS.get(station_code, "Aéroport inconnu")
-        report_content = f"Rapport METAR pour {airport_name} ({station_code}):\n\n{metar_info.replace('<br>', '\n')}"
+        report_content = "Rapport METAR pour " + airport_name + " (" + station_code + "):\n\n" + metar_info.replace('<br>', '\n')
         
         # Créer un fichier en mémoire
         buffer = io.BytesIO()
