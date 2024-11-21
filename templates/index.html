@@ -4,11 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MétarView</title>
+    <!-- Favicon -->
     <link
       rel="icon"
       type="image/png"
       href="{{ url_for('static', filename='img/metar.png') }}"
     />
+    <!-- CSS Stylesheet -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
@@ -18,6 +20,7 @@
     <header>
       <div class="header-content">
         <div class="logo">
+          <!-- Logo de l'application -->
           <img
             src="{{ url_for('static', filename='img/Metar.png') }}"
             alt="Logo metar"
@@ -42,16 +45,34 @@
           "
           >METAR Aéroport Paris–Charles de Gaulle</a
         >
-        <script
-          async
-          defer
-          crossorigin="anonymous"
-          src="https://metar-taf.com/fr/embed-js/LFPG?qnh=hPa&rh=rh&target=lDPdZ6wg"
-        ></script>
+        <script>
+          function updateMetarLink(stationCode) {
+            const link = document.getElementById('metartaf-lDPdZ6wg');
+            link.href = `https://metar-taf.com/fr/${stationCode}`;
+            const existingScript = document.querySelector('script[src*="metar-taf.com/fr/embed-js"]');
+            if (existingScript) {
+              existingScript.remove();
+            }
+            const script = document.createElement('script');
+            script.async = true;
+            script.defer = true;
+            script.src = `https://metar-taf.com/fr/embed-js/${stationCode}?qnh=hPa&rh=rh&target=lDPdZ6wg`;
+            document.body.appendChild(script);
+          }
+
+          document.getElementById('station_code').addEventListener('input', function() {
+            updateMetarLink(this.value);
+          });
+
+          document.getElementById('icao_list').addEventListener('change', function() {
+            updateMetarLink(this.value);
+          });
+        </script>
       </aside>
 
       <main class="container">
         <section class="search-form">
+          <!-- Formulaire de recherche METAR -->
           <form method="POST" action="/">
             <div class="form-group">
               <div class="input-group">
@@ -74,13 +95,9 @@
                   onchange="document.getElementById('station_code').value = this.value;"
                 >
                   <option value="">Sélectionner un code ICAO</option>
+                  <!-- Liste des codes ICAO -->
                   <!-- France -->
-                  <option value="LFPG">
-                    LFPG : Aéroport Charles de Gaulle
-                  </option>
-                  <option value="LFPB">
-                    LFPB : Aéroport de Paris-Le Bourget
-                  </option>
+                  <option value="LFPG">LFPG : Aéroport Aéroport Charles de Gaulle</option>
                   <option value="LFPO">LFPO : Aéroport de Paris-Orly</option>
                   <option value="LFRN">LFRN : Aéroport de Rennes</option>
                   <option value="LFBD">
