@@ -116,23 +116,32 @@ def decode_metar(metar_data, station_code):
     except (AttributeError, ValueError):
         heure_info = "Données sur l'heure d'observation indisponibles."
 
-    # Décodage de la couverture nuageuse
+    # Décodage de la couverture nuageuse avec interprétation
     try:
         clouds = metar_data.clouds  # Liste des couches nuageuses
         if not clouds:  # Si la liste est vide ou None
             clouds_info = "Couverture nuageuse : Ciel clair."
         else:
             cloud_layers = []
+            coverage_map = {
+                "FEW": "Quelques nuages (1-2/8 du ciel couvert)",
+                "SCT": "Nuages épars (3-4/8 du ciel couvert)",
+                "BKN": "Nuages fragmentés (5-7/8 du ciel couvert)",
+                "OVC": "Ciel couvert (8/8 du ciel couvert)",
+            }
             for layer in clouds:
                 try:
-                    # Vérification et récupération des données disponibles
-                    coverage = getattr(layer, 'repr', None)  # Code abrégé (FEW029, etc.)
+                    # Récupérer les données pour chaque couche
+                    coverage_code = getattr(layer, 'type', None)  # Type de nuages (FEW, SCT, etc.)
                     base = getattr(layer, 'base', None)  # Altitude en centaines de pieds
-                    if coverage:  # Si la couverture est présente
+                    if coverage_code in coverage_map:
+                        description = coverage_map[coverage_code]
                         if base is not None:
-                            cloud_layers.append(f"{coverage} à {base * 100} pieds")  # Altitude en pieds
+                            cloud_layers.append(f"{description}, à une altitude de {base * 100} pieds")
                         else:
-                            cloud_layers.append(coverage)  # Couverture sans altitude
+                            cloud_layers.append(description)
+                    elif coverage_code:  # Code inconnu mais présent
+                        cloud_layers.append(f"Couverture non spécifiée ({coverage_code})")
                 except Exception as e:
                     print(f"Erreur lors du traitement d'une couche nuageuse : {e}", file=sys.stderr)
             # Construire la description finale
