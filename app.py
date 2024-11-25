@@ -5,6 +5,11 @@ from datetime import datetime
 import pytz
 import logging
 import io
+from tzlocal import get_localzone
+
+local_tz = get_localzone()
+timezone = str(local_tz)
+country = timezone.split('/')[1]
 
 app = Flask(__name__)
 
@@ -123,12 +128,12 @@ def decode_metar(metar_data, station_code):
         now = datetime.utcnow()  # Date actuelle en UTC
         observation_time_utc = now.replace(day=day, hour=hour, minute=minute, second=0, microsecond=0)
 
-        local_tz = pytz.timezone('America/Martinique')
+        # local_tz = pytz.timezone('America/Martinique')
         observation_time_local = observation_time_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
 
         heure_info = (
             f"Heure d'observation UTC : {observation_time_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC<br>"
-            f"Heure locale (Martinique) : {observation_time_local.strftime('%Y-%m-%d %H:%M:%S')} (heure locale)"
+            f"Heure locale {country} : {observation_time_local.strftime('%Y-%m-%d %H:%M:%S')} (heure locale)"
         )
     except (AttributeError, ValueError):
         heure_info = "Données sur l'heure d'observation indisponibles."
