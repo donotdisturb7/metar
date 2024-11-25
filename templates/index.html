@@ -29,47 +29,6 @@
       </div>
     </header>
 
-    <div class="page-layout">
-      <aside class="left-container">
-        <!-- Contenu du conteneur gauche -->
-        <a
-          href="https://metar-taf.com/fr/LFPG"
-          id="metartaf-lDPdZ6wg"
-          style="
-            font-size: 18px;
-            font-weight: 500;
-            color: #000;
-            width: 300px;
-            height: 435px;
-            display: block;
-          "
-          >METAR Aéroport Paris–Charles de Gaulle</a
-        >
-        <script>
-          function updateMetarLink(stationCode) {
-            const link = document.getElementById('metartaf-lDPdZ6wg');
-            link.href = `https://metar-taf.com/fr/${stationCode}`;
-            const existingScript = document.querySelector('script[src*="metar-taf.com/fr/embed-js"]');
-            if (existingScript) {
-              existingScript.remove();
-            }
-            const script = document.createElement('script');
-            script.async = true;
-            script.defer = true;
-            script.src = `https://metar-taf.com/fr/embed-js/${stationCode}?qnh=hPa&rh=rh&target=lDPdZ6wg`;
-            document.body.appendChild(script);
-          }
-
-          document.getElementById('station_code').addEventListener('input', function() {
-            updateMetarLink(this.value);
-          });
-
-          document.getElementById('icao_list').addEventListener('change', function() {
-            updateMetarLink(this.value);
-          });
-        </script>
-      </aside>
-
       <main class="container">
         <section class="search-form">
           <!-- Formulaire de recherche METAR -->
@@ -83,7 +42,7 @@
                   name="station_code"
                   maxlength="4"
                   pattern="[A-Za-z]{4}"
-                  placeholder="ex: TFFF"
+                  placeholder="ex: LFPG"
                   required
                 />
               </div>
@@ -97,7 +56,9 @@
                   <option value="">Sélectionner un code ICAO</option>
                   <!-- Liste des codes ICAO -->
                   <!-- France -->
-                  <option value="LFPG">LFPG : Aéroport Aéroport Charles de Gaulle</option>
+                  <option value="LFPG">
+                    LFPG : Aéroport Aéroport Charles de Gaulle
+                  </option>
                   <option value="LFPO">LFPO : Aéroport de Paris-Orly</option>
                   <option value="LFRN">LFRN : Aéroport de Rennes</option>
                   <option value="LFBD">
@@ -168,9 +129,42 @@
           {% else %}
           <div class="metar-info">
             <h3>{{ airport_name }}</h3>
-            {{ metar_info|safe }}
+            <table>
+              <tr>
+                <th>METAR brut</th>
+                <td>{{ metar_info.split('<br>')[0] }}</td>
+              </tr>
+              <tr>
+                <th>Vent</th>
+                <td>{{ metar_info.split('<br>')[1] }}</td>
+              </tr>
+              <tr>
+                <th>Température</th>
+                <td>{{ metar_info.split('<br>')[2] }}</td>
+              </tr>
+              <tr>
+                <th>Visibilité</th>
+                <td>{{ metar_info.split('<br>')[3] }}</td>
+              </tr>
+              <tr>
+                <th>Pression atmosphérique</th>
+                <td>{{ metar_info.split('<br>')[4] }}</td>
+              </tr>
+              <tr>
+                <th>Couverture nuageuse</th>
+                <td>{{ metar_info.split('<br>')[5] }}</td>
+              </tr>
+              <tr>
+                <th>Couverture nuageuse</th>
+                <td>{{ metar_info.split('<br>')[6] }}</td>
+              </tr>
+              <tr>
+                <th>Heure locale Martinique</th>
+                <td>{{ metar_info.split('<br>')[7] }}</td>
+              </tr>
+            </table>
           </div>
-          <br>
+          <br />
           {% if metar_info %}
           <form method="POST" action="/download">
             <input
@@ -183,12 +177,6 @@
           {% endif %} {% endif %}
         </section>
         {% endif %}
-      </main>
-
-      <aside class="right-container">
-        <!-- Contenu du conteneur droit -->
-        Conteneur droit
-      </aside>
-    </div>
+        </main>
   </body>
 </html>

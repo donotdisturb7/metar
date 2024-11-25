@@ -64,7 +64,7 @@ def decode_metar(metar_data, station_code):
     # METAR brut
     try:
         metar_brut = metar_data.raw  # Récupère le METAR brut
-        metar_brut_info = f"METAR brut : {metar_brut}"
+        metar_brut_info = f"{metar_brut}"
     except Exception as e:
         metar_brut_info = f"Impossible de récupérer le METAR brut : {e}"
 
@@ -80,7 +80,7 @@ def decode_metar(metar_data, station_code):
     try:
         temperature = format_temperature(metar_data.temperature.repr)  # Utilise la fonction de formatage
         dew_point = format_temperature(metar_data.dewpoint.repr)  # Idem pour le point de rosée
-        temperature_info = f"Température : {temperature}°C, Point de rosée : {dew_point}°C."
+        temperature_info = f"{temperature}°C, Point de rosée : {dew_point}°C."
     except Exception as e:
         temperature_info = f"Données sur la température indisponibles : {e}"
 
@@ -90,17 +90,17 @@ def decode_metar(metar_data, station_code):
         visibility_float = float(visibility) if visibility.isdigit() else None  # Convertir en float si possible
         
         if visibility == "CAVOK":
-            visibility_info = "Visibilité : CAVOK (pas de phénomènes significatifs, visibilité supérieure à 10 km)."
+            visibility_info = " CAVOK (pas de phénomènes significatifs, visibilité supérieure à 10 km)."
         elif visibility_float is not None:
             # Détecter si l'on est en miles (pour les États-Unis et le Canada)
             if station_code.startswith(("K", "C")):  # États-Unis ('K') et Canada ('C')
                 visibility_miles = visibility_float  # La visibilité est directement en miles
-                visibility_info = f"Visibilité : {visibility_miles:.2f} miles."
+                visibility_info = f"{visibility_miles:.2f} miles."
             else:
                 visibility_km = visibility_float / 1000  # Convertir en kilomètres pour les autres
-                visibility_info = f"Visibilité : {visibility_km:.2f} km."
+                visibility_info = f"{visibility_km:.2f} km."
         else:
-            visibility_info = f"Visibilité : {visibility} (format inconnu)."
+            visibility_info = f"{visibility} (format inconnu)."
     except Exception as e:
         visibility_info = f"Données sur la visibilité indisponibles : {e}"
 
@@ -110,11 +110,11 @@ def decode_metar(metar_data, station_code):
     try:
         pression = metar_data.altimeter.repr
         if pression.startswith('Q'):
-            pression_info = f"Pression atmosphérique : {pression[1:]} hPa (hectopascals, système international)."
+            pression_info = f"{pression[1:]} hPa (hectopascals, système international)."
         elif pression.startswith('A'):
-            pression_info = f"Pression atmosphérique : {pression[1:]} inHg (pouces de mercure, utilisé principalement aux USA)."
+            pression_info = f"{pression[1:]} inHg (pouces de mercure, utilisé principalement aux USA)."
         else:
-            pression_info = f"Pression atmosphérique : {pression} (unité non spécifiée)."
+            pression_info = f"{pression} (unité non spécifiée)."
     except AttributeError:
         pression_info = "Données sur la pression atmosphérique indisponibles."
 
@@ -132,8 +132,8 @@ def decode_metar(metar_data, station_code):
         observation_time_local = observation_time_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
 
         heure_info = (
-            f"Heure d'observation UTC : {observation_time_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC<br>"
-            f"Heure locale {country} : {observation_time_local.strftime('%Y-%m-%d %H:%M:%S')} (heure locale)"
+            f"{observation_time_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC<br>"
+            f"{observation_time_local.strftime('%Y-%m-%d %H:%M:%S')}"
         )
     except (AttributeError, ValueError):
         heure_info = "Données sur l'heure d'observation indisponibles."

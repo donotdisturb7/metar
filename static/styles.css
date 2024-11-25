@@ -20,7 +20,7 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -35,10 +35,6 @@ header {
 
 .header-content {
     max-width: 1000px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .logo {
@@ -113,6 +109,28 @@ button:hover {
 
 .metar-info {
     line-height: 1.8;
+}
+
+.metar-info table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.metar-info th, .metar-info td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    flex-wrap: wrap;
+}
+
+.metar-info th {
+    background-color: var(--bg-color);
+    color: white;
+    text-align: left;
+}
+
+.metar-info td {
+    background-color: #f9f9f9;
 }
 
 .metar-section {
