@@ -63,7 +63,7 @@ def decode_metar(metar_data, station_code):
     except Exception as e:
         metar_brut_info = f"Impossible de récupérer le METAR brut : {e}"
 
-    # Décodage du vent
+    #Décodage du vent
     try:
         vent_direction = metar_data.wind_direction.repr
         vent_vitesse = metar_data.wind_speed.repr
