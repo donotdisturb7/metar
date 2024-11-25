@@ -142,7 +142,7 @@ def decode_metar(metar_data, station_code):
     try:
         clouds = metar_data.clouds  # Liste des couches nuageuses
         if not clouds:  # Si la liste est vide ou None
-            clouds_info = "Couverture nuageuse : Ciel clair."
+            clouds_info = "Ciel clair."
         else:
             cloud_layers = []
             coverage_map = {
