@@ -45,8 +45,23 @@ ERROR_MESSAGES = {
     "fetch_error": "Erreur lors de la récupération du METAR : {error}"
 }
 
+def format_temperature(temp):
+    """
+    Convertit une température METAR (ex : M01) en un format lisible avec le signe négatif (ex : -1).
+    """
+    if temp.startswith('M'):
+        return f"-{temp[1:]}"  # Remplace 'M' par '-' et garde les chiffres
+    return temp  # Retourne tel quel si pas de 'M'
+
+
 def decode_metar(metar_data, station_code):
     """Décode le rapport METAR en informations compréhensibles avec gestion des exceptions"""
+    # METAR brut
+    try:
+        metar_brut = metar_data.raw  # Récupère le METAR brut
+        metar_brut_info = f"METAR brut : {metar_brut}"
+    except Exception as e:
+        metar_brut_info = f"Impossible de récupérer le METAR brut : {e}"
 
     # Décodage du vent
     try:
@@ -56,33 +71,35 @@ def decode_metar(metar_data, station_code):
     except AttributeError:
         vent_info = "Données sur le vent indisponibles."
 
-    # Décodage de la température et du point de rosée
+    # Températures
     try:
-        temperature = metar_data.temperature.repr
-        dew_point = metar_data.dewpoint.repr
+        temperature = format_temperature(metar_data.temperature.repr)  # Utilise la fonction de formatage
+        dew_point = format_temperature(metar_data.dewpoint.repr)  # Idem pour le point de rosée
         temperature_info = f"Température : {temperature}°C, Point de rosée : {dew_point}°C."
-    except AttributeError:
-        temperature_info = "Données sur la température et le point de rosée indisponibles."
+    except Exception as e:
+        temperature_info = f"Données sur la température indisponibles : {e}"
 
-    # Décodage de la visibilité
+   # Visibilité
     try:
-        visibility = metar_data.visibility.repr
+        visibility = metar_data.visibility.repr  # Récupère la visibilité en tant que chaîne
+        visibility_float = float(visibility) if visibility.isdigit() else None  # Convertir en float si possible
+        
         if visibility == "CAVOK":
             visibility_info = "Visibilité : CAVOK (pas de phénomènes significatifs, visibilité supérieure à 10 km)."
-        else:
-            if 'SM' in visibility:
-                visibility_value = float(visibility.replace('SM', '').strip())
-                visibility_info = f"Visibilité : {visibility_value} miles."
+        elif visibility_float is not None:
+            # Détecter si l'on est en miles (pour les États-Unis et le Canada)
+            if station_code.startswith(("K", "C")):  # États-Unis ('K') et Canada ('C')
+                visibility_miles = visibility_float  # La visibilité est directement en miles
+                visibility_info = f"Visibilité : {visibility_miles:.2f} miles."
             else:
-                visibility_value = int(visibility)
+                visibility_km = visibility_float / 1000  # Convertir en kilomètres pour les autres
+                visibility_info = f"Visibilité : {visibility_km:.2f} km."
+        else:
+            visibility_info = f"Visibilité : {visibility} (format inconnu)."
+    except Exception as e:
+        visibility_info = f"Données sur la visibilité indisponibles : {e}"
 
-                if station_code.startswith('K'):
-                    visibility_in_miles = visibility_value / 1609.34  # Conversion mètres -> miles
-                    visibility_info = f"Visibilité : {visibility_in_miles:.2f} miles."
-                else:
-                    visibility_info = f"Visibilité : {visibility_value} mètres."
-    except (AttributeError, ValueError):
-        visibility_info = "Données sur la visibilité indisponibles."
+
 
     # Décodage de la pression atmosphérique
     try:
@@ -156,13 +173,15 @@ def decode_metar(metar_data, station_code):
 
     # Construction finale des informations décodées
     metar_decoded = (
+        f"{metar_brut_info}<br>"
         f"{vent_info}<br>"
         f"{temperature_info}<br>"
         f"{visibility_info}<br>"
         f"{pression_info}<br>"
-        f"{heure_info}<br>"
         f"{clouds_info}<br>"
+        f"{heure_info}<br>"
     )
+
 
     return metar_decoded
 
