@@ -11,6 +11,8 @@ local_tz = get_localzone()
 timezone = str(local_tz)
 country = timezone.split('/')[1]
 
+
+
 app = Flask(__name__)
 
 # Configuration des logs

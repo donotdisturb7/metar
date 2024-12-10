@@ -113,20 +113,27 @@ button:hover {
 
 .metar-info table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 1rem;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #111;
+
 }
 
 .metar-info th, .metar-info td {
     border: 1px solid #ddd;
     padding: 8px;
     flex-wrap: wrap;
+    
 }
 
 .metar-info th {
     background-color: var(--bg-color);
     color: white;
     text-align: left;
+    
 }
 
 .metar-info td {
